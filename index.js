@@ -2,7 +2,28 @@
 const express = require('express')
 const app = express()
 
+
+//middleware de registro de solicitudes
+const requestLogger = (request, response, next) => {
+  console.log('Method:', request.method);
+  console.log('Path:  ', request.path);
+  console.log('Body:  ', request.body);
+  console.log('---');
+  next(); 
+};
+
+//agregar el middleware de registro de solicitudes
+app.use(requestLogger);
+
+
 app.use(express.json())
+
+const unknownEndpoint = (request, response) => {
+  response.status(404).send({ error: 'unknown endpoint' })
+}
+
+app.use(unknownEndpoint)
+
 
 let notes = [
     {
@@ -21,23 +42,8 @@ let notes = [
       important: true
     }
   ]
-  //se definen dos rutas el primero define un controlador de eventos y se utiliza para manejar la solicitid http
-  app.get('/', (request, response) => {
-    response.send('<h1>Hello World!</h1>')
-  })
-
-  app.get('/api/notes/:id', (request, response) => {
-    const noteId = request.params.id;
-    const note = notes.find((note) => note.id === Number(noteId));
-  
-    if (!note) {
-      response.status(404).send('Note not found');
-      return;
-    }
-  
-    response.json(note);
-  });
-  
+ 
+ 
 
   const generateId = () => {
     const maxId = notes.length > 3
@@ -53,8 +59,7 @@ let notes = [
     if (!body.content) {
       //el return es inportante por que de lo contrario el codigo se ejecutará infinitamente y la nota con 
       //formato incorrecto se guarda en la aplicacion y eso estaria mal
-      return response.status(400).json({ 
-        error: 'content missing' 
+      return response.status(400).json({ error: 'content missing' 
       })
     }
   
@@ -77,7 +82,6 @@ app.delete('/api/notes/:id', (request, response) => {
 
   response.status(204).end()
 })
-
 
 
   const PORT = 3001
